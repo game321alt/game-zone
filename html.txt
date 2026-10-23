@@ -1,0 +1,150 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GAME ZONE | Jogos Online</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0b1020;color:#fff;font-family:Arial,sans-serif}
+header{padding:22px 6%;background:#11182b;border-bottom:1px solid #273454}
+.logo{font-size:30px;font-weight:900;color:#a78bfa}
+.logo span{color:#22d3ee}
+header p{color:#aab5d0}
+main{max-width:1150px;margin:auto;padding:24px}
+.hero{padding:32px 24px;border-radius:22px;background:linear-gradient(120deg,#5125a8,#075985);margin-bottom:28px}
+.hero h1{font-size:clamp(30px,6vw,48px);margin:0 0 12px}
+.hero p{color:#e1e7ff;line-height:1.6}
+.search{width:100%;padding:15px;border:1px solid #344363;border-radius:12px;background:#151e32;color:white;font-size:16px;margin:12px 0 20px}
+.filters{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:25px}
+.filters button,.play{border:0;border-radius:9px;padding:11px 15px;cursor:pointer;font-weight:bold}
+.filters button{background:#202b43;color:white}
+.filters button.active{background:#8b5cf6}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.game{background:#151e32;border:1px solid #263451;border-radius:16px;overflow:hidden;transition:.2s}
+.game:hover{transform:translateY(-4px);border-color:#8b5cf6}
+.cover{height:140px;display:grid;place-items:center;font-size:65px}
+.game-info{padding:16px}
+.game h3{margin:0 0 8px}
+.game p{color:#aab5d0;font-size:14px;min-height:35px}
+.actions{display:flex;gap:8px;align-items:center}
+.play{background:#8b5cf6;color:white;text-decoration:none;text-align:center;flex:1}
+.fav{border:1px solid #394663;background:#202b43;color:white;border-radius:9px;padding:10px;cursor:pointer;font-size:18px}
+footer{text-align:center;color:#8995b2;padding:35px 15px}
+.empty{color:#aab5d0;padding:25px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">🎮 GAME <span>ZONE</span></div>
+  <p>Seu universo de jogos começa aqui!</p>
+</header>
+
+<main>
+  <section class="hero">
+    <h1>PRONTO PARA JOGAR?</h1>
+    <p>Muitos jogos, aventuras incríveis e diversão direto no navegador.</p>
+    <strong>⚡ Escolha seu jogo e bora jogar!</strong>
+  </section>
+
+  <input id="search" class="search" placeholder="🔎 Pesquisar jogos..." aria-label="Pesquisar jogos">
+
+  <nav class="filters" aria-label="Categorias">
+    <button class="active" data-category="Todos">Todos</button>
+    <button data-category="Aventura">🧱 Aventura</button>
+    <button data-category="Corrida">🏃 Corrida</button>
+    <button data-category="Ação">⚔️ Ação</button>
+    <button data-category="Arcade">🕹️ Arcade</button>
+    <button data-category="Favoritos">⭐ Favoritos</button>
+  </nav>
+
+  <h2 id="section-title">🔥 Todos os jogos</h2>
+  <section class="grid" id="games"></section>
+  <p id="empty" class="empty" hidden>Nenhum jogo encontrado. Tente outra pesquisa!</p>
+</main>
+
+<footer>🎮 GAME ZONE · Feito para quem ama jogar</footer>
+
+<script>
+const catalog = [
+ {name:"Eaglercraft",category:"Aventura",emoji:"🧱",color:"#245c48",desc:"Explore um mundo de blocos.",url:"https://eaglercraft.com/"},
+ {name:"Subway Surfers",category:"Corrida",emoji:"🏃",color:"#b34d25",desc:"Corra, desvie e pegue moedas.",url:"https://poki.com/en/g/subway-surfers"},
+ {name:"Temple Run 2",category:"Corrida",emoji:"🏃‍♂️",color:"#77502d",desc:"Fuja e desvie dos obstáculos.",url:"https://poki.com/"},
+ {name:"Moto X3M",category:"Corrida",emoji:"🏍️",color:"#146c91",desc:"Supere pistas cheias de desafios.",url:"https://poki.com/"},
+ {name:"2048",category:"Arcade",emoji:"🔢",color:"#66533d",desc:"Combine números e alcance 2048.",url:"https://play2048.co/"},
+ {name:"Krunker",category:"Ação",emoji:"🎯",color:"#6650a0",desc:"Ação em um jogo de tiro online.",url:"https://krunker.io/"},
+ {name:"Cookie Clicker",category:"Arcade",emoji:"🍪",color:"#92512b",desc:"Clique para criar uma fábrica de biscoitos.",url:"https://orteil.dashnet.org/cookieclicker/"},
+ {name:"Jogos de aventura",category:"Aventura",emoji:"🗺️",color:"#286a61",desc:"Descubra mais mundos e desafios.",url:"https://poki.com/"}
+];
+
+let category = "Todos";
+let favorites = [];
+try { favorites = JSON.parse(localStorage.getItem("gz-favorites") || "[]"); } catch {}
+
+const container = document.getElementById("games");
+const search = document.getElementById("search");
+const empty = document.getElementById("empty");
+const title = document.getElementById("section-title");
+
+function render(){
+  const term = search.value.trim().toLowerCase();
+  const list = catalog.filter(g =>
+    (category === "Todos" || (category === "Favoritos"
+      ? favorites.includes(g.name) : g.category === category)) &&
+    (g.name.toLowerCase().includes(term) ||
+     g.category.toLowerCase().includes(term) ||
+     g.desc.toLowerCase().includes(term))
+  );
+
+  title.textContent = category === "Favoritos"
+    ? "⭐ Seus favoritos" : "🎮 " + category;
+
+  container.innerHTML = list.map(g => `
+    <article class="game">
+      <div class="cover" style="background:${g.color}">${g.emoji}</div>
+      <div class="game-info">
+        <h3>${g.name}</h3>
+        <p>${g.desc}</p>
+        <div class="actions">
+          <a class="play" href="${g.url}" target="_blank"
+             rel="noopener noreferrer">JOGAR ↗</a>
+          <button class="fav" data-fav="${g.name}"
+            aria-label="Favoritar ${g.name}"
+            aria-pressed="${favorites.includes(g.name)}">
+            ${favorites.includes(g.name) ? "⭐" : "☆"}
+          </button>
+        </div>
+      </div>
+    </article>
+  `).join("");
+
+  empty.hidden = list.length !== 0;
+}
+
+container.addEventListener("click", e => {
+  const button = e.target.closest("[data-fav]");
+  if (!button) return;
+  const name = button.dataset.fav;
+  favorites = favorites.includes(name)
+    ? favorites.filter(n => n !== name)
+    : [...favorites, name];
+  try { localStorage.setItem("gz-favorites", JSON.stringify(favorites)); } catch {}
+  render();
+});
+
+document.querySelector(".filters").addEventListener("click", e => {
+  const button = e.target.closest("button[data-category]");
+  if (!button) return;
+  category = button.dataset.category;
+  document.querySelectorAll(".filters button").forEach(b =>
+    b.classList.toggle("active", b === button)
+  );
+  render();
+});
+
+search.addEventListener("input", render);
+render();
+</script>
+</body>
+</html>
